@@ -1,0 +1,18 @@
+image: atlassian/default-image:3
+
+pipelines:
+  branches:
+    main:
+      - step:
+          name: Deploy to Server
+          deployment: production
+          caches:
+            - ssh
+          script:
+            - apt-get update && apt-get install -y openssh-client
+            - mkdir -p ~/.ssh
+            - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+            - chmod 600 ~/.ssh/id_rsa
+            - ssh-keyscan 143.198.59.110 >> ~/.ssh/known_hosts
+            - echo "Deploying to Production..."
+            - rsync -avz --exclude '.git' ./ root@143.198.59.110:/var/www/costcalculator/

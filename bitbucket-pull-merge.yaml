@@ -1,0 +1,34 @@
+image: atlassian/default-image:3
+
+pipelines:
+  branches:
+    main:
+      - step:
+          name: Pull & Merge on Server
+          deployment: production
+          script:
+            - apt-get update && apt-get install -y openssh-client
+            - mkdir -p ~/.ssh
+            - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+            - chmod 600 ~/.ssh/id_rsa
+            - ssh-keyscan 143.198.59.110 >> ~/.ssh/known_hosts
+            - |
+              ssh root@143.198.59.110 << 'EOF'
+                cd /var/www/costcalculator/
+                
+                git config user.name "nexusameer"
+                git config user.email "ameer.hamza@clustox.com"
+  
+                # Stash any local changes to avoid conflicts
+                git stash -u
+                # Remove the problematic file from the merge temporarily
+                git rm --cached bitbucket-pipelines.yml || true
+                # Pull the latest changes from the main branch
+                git pull origin main
+                # Re-add the bitbucket-pipelines.yml if needed
+                git add bitbucket-pipelines.yml || true
+                # Apply the stashed changes back (if any)
+                git stash pop
+                # Commit changes (including re-added file)
+                git commit -am "Merged changes from main and re-added bitbucket-pipelines.yml"
+              EOF
