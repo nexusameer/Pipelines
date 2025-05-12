@@ -1,0 +1,19 @@
+image: atlassian/default-image:3
+
+pipelines:
+  branches:
+    main:
+    - step:
+        name: Pull from main & Deploy to test
+        deployment: test
+        script:
+          - git config --global user.email "ameer.hamza@clustox.com"
+          - git config --global user.name "nexusameer"
+          - git checkout main
+          - git pull origin main
+          - echo "Running tests with latest main code"
+          - # Add your test commands here
+          - mkdir -p ~/.ssh
+          - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          - chmod 600 ~/.ssh/id_rsa
+          - ssh -o StrictHostKeyChecking=no root@146.190.129.82 'echo "hello from on remote server"'
